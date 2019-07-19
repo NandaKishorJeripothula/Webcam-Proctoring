@@ -1,20 +1,13 @@
-import React, { Component } from "react";
-import * as faceapi from "face-api.js";
-
+import React from "react";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
 import './App.css';
-export default class Home extends Component {
+
+export default class Capture extends React.Component {
   constructor() {
     super();
-    this.state = {
-      videoSrc: null,
-      Facescount: 0,
-      warningCount: 0,
-      errMessage: '',
-    };
+    this.state = { status: "" };
   }
-
   videoRef = React.createRef();
   canvasRef = React.createRef();
 
@@ -39,8 +32,6 @@ export default class Home extends Component {
       const modelPromise = cocoSsd.load('lite_mobilenet_v2');
         Promise.all([modelPromise, webCamPromise])
         .then(values => {
-          this.canvasRef.current.width= this.videoRef.current.offsetWidth;
-          this.canvasRef.current.height= this.videoRef.current.offsetHeight;
           // this.detectFrame(this.videoRef.current, values[0]);
           this.getPicture(this.videoRef.current,values[0]);
         })
@@ -63,28 +54,20 @@ export default class Home extends Component {
     model.detect(video).then(predictions => {
       console.log(predictions);
       if (!predictions.length) {
+        this.setState({ status: "No one detected" });
         console.log("No image");
-        this.setState((prevState)=>(
-          {
-            errMessage: "No one detected",
-            Facescount:0,
-            warningCount:prevState.warningCount+1
-          }
-        ));
       }
-      else if (!(predictions.length === 1 && predictions[0].class === "person")) {
-        this.setState((prevState)=>({ errMessage: "Suspicious Activity Detected", Facescount:predictions.length, warningCount:prevState.warningCount+1 }));
+      if (!(predictions.length === 1 && predictions[0].class === "person")) {
+        this.setState({ status: "" });
         console.log("Suspicious");
-      }else{
-        this.setState({Facescount:1, errMessage:''});
-        this.renderPredictions(predictions);
-        requestAnimationFrame(() => {
+      }
+      this.renderPredictions(predictions);
+      requestAnimationFrame(() => {
         this.detectFrame(video, model);
       });
-      }
-      
     });
   };
+
   renderPredictions = predictions => {
     const ctx = this.canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -118,41 +101,25 @@ export default class Home extends Component {
   };
 
   render() {
+    let { status } = this.state;
     return (
       <div>
-        <h2>Webcam Proctoring</h2>
-        <div>
-          <div style={{ float: "left" }}>
-            Faces:
-            <h6>{this.state.Facescount}</h6>
-          </div>
-          <div style={{ float: "right" }}>
-            Warnings:
-            <h6>{this.state.warningCount}</h6>
-          </div>
-        </div>
-        <div>
-
+        {status}
         <video
+          className="size"
           autoPlay
           playsInline
           muted
           ref={this.videoRef}
-          width="200"
-          height="300"
-          onPlay={(e)=>{document.getElementById("canvas").width=e.offsetWidth;document.getElementById("canvas").height= e.offsetHeight; }}
+          width="600"
+          height="500"
         />
         <canvas
+          className="size"
           ref={this.canvasRef}
-          // width="600"
-          // height="500"
-          id="canvas"
+          width="600"
+          height="500"
         />
-
-<p style={{ color: "red" }}>{this.state.errMessage}</p>
-        </div>
-       
-       
       </div>
     );
   }
