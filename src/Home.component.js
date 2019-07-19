@@ -37,12 +37,12 @@ export default class Home extends Component {
           });
         });
       const modelPromise = cocoSsd.load('lite_mobilenet_v2');
-        Promise.all([modelPromise, webCamPromise])
+      Promise.all([modelPromise, webCamPromise])
         .then(values => {
-          this.canvasRef.current.width= this.videoRef.current.offsetWidth;
-          this.canvasRef.current.height= this.videoRef.current.offsetHeight;
+          // this.canvasRef.current.width = this.videoRef.current.offsetWidth;
+          // this.canvasRef.current.height = this.videoRef.current.offsetHeight;
           // this.detectFrame(this.videoRef.current, values[0]);
-          this.getPicture(this.videoRef.current,values[0]);
+          this.getPicture(this.videoRef.current, values[0]);
         })
         .catch(error => {
           console.error(error);
@@ -50,9 +50,9 @@ export default class Home extends Component {
     }
   }
   getPicture(videoStream, model) {
-    const imageGrabber= document.createElement('canvas');
-    imageGrabber.width= videoStream.width;
-    imageGrabber.height= videoStream.height;
+    const imageGrabber = document.createElement('canvas');
+    imageGrabber.width = videoStream.width;
+    imageGrabber.height = videoStream.height;
     setInterval(async () => {
       await imageGrabber.getContext('2d').drawImage(videoStream, 0, 0, imageGrabber.width, imageGrabber.height);
       this.detectFrame(imageGrabber, model);
@@ -61,28 +61,29 @@ export default class Home extends Component {
   }
   detectFrame = async (video, model) => {
     model.detect(video).then(predictions => {
-      console.log(predictions);
+      // console.log(predictions);
       if (!predictions.length) {
         console.log("No image");
-        this.setState((prevState)=>(
+        this.setState((prevState) => (
           {
             errMessage: "No one detected",
-            Facescount:0,
-            warningCount:prevState.warningCount+1
+            Facescount: 0,
+            warningCount: prevState.warningCount + 1
           }
         ));
       }
       else if (!(predictions.length === 1 && predictions[0].class === "person")) {
-        this.setState((prevState)=>({ errMessage: "Suspicious Activity Detected", Facescount:predictions.length, warningCount:prevState.warningCount+1 }));
+        this.setState((prevState) => ({ errMessage: "Suspicious Activity Detected", Facescount: predictions.length, warningCount: prevState.warningCount + 1 }));
         console.log("Suspicious");
-      }else{
-        this.setState({Facescount:1, errMessage:''});
-        this.renderPredictions(predictions);
+        // this.renderPredictions(predictions);
+      } else {
+        this.setState({ Facescount: 1, errMessage: '' });
+        // this.renderPredictions(predictions);
         requestAnimationFrame(() => {
-        this.detectFrame(video, model);
-      });
+          this.detectFrame(video, model);
+        });
       }
-      
+
     });
   };
   renderPredictions = predictions => {
@@ -133,26 +134,36 @@ export default class Home extends Component {
         </div>
         <div>
 
-        <video
+          <video
+            autoPlay
+            playsInline
+            muted
+            ref={this.videoRef}
+            width="600"
+            height="500"
+          />
+          <p style={{ color: "red" }}>{this.state.errMessage}</p>
+        </div>
+        {/* <div>
+
+<video
           autoPlay
           playsInline
           muted
-          ref={this.videoRef}
-          width="200"
-          height="300"
-          onPlay={(e)=>{document.getElementById("canvas").width=e.offsetWidth;document.getElementById("canvas").height= e.offsetHeight; }}
+          width="300"
+          height="200"
+          className="size"
         />
         <canvas
           ref={this.canvasRef}
-          // width="600"
-          // height="500"
+          width="300"
+          height="200"
+          className="size"
           id="canvas"
         />
 
-<p style={{ color: "red" }}>{this.state.errMessage}</p>
-        </div>
-       
-       
+</div> */}
+
       </div>
     );
   }
