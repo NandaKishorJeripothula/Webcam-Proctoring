@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import * as faceapi from "face-api.js";
-
+import Peer from 'peerjs';
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
 import './App.css';
@@ -17,7 +17,36 @@ export default class Home extends Component {
 
   videoRef = React.createRef();
   canvasRef = React.createRef();
+ 
+  getInitialState = () => {
+    /**
+     * this if for testing the local system 
+     */
+    return {
+      peer: new Peer('8500682248'),
+      my_id: '8500682248',
+      peer_id: '',
+      initialized: false,
+    }
 
+    // This works for the online proctoring
+    // return {
+    //   peer = new Peer({
+    //     host: 'yourwebsite.com', port: 3000, path: '/peerjs',
+    //     debug: 3,
+    //     config: {'iceServers': [
+    //       { url: 'stun:stun1.l.google.com:19302' },
+    //       { url: 'turn:numb.viagenie.ca', credential: 'muazkh', username: 'webrtc@live.com' }
+    //     ]}
+    //   })
+    // }
+  }
+
+  componentWillMount=async ()=>{
+    console.log("Hey ")
+  await this.setState({...this.getInitialState()});
+
+  }
   componentDidMount() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       const webCamPromise = navigator.mediaDevices
@@ -43,6 +72,16 @@ export default class Home extends Component {
           // this.canvasRef.current.height = this.videoRef.current.offsetHeight;
           // this.detectFrame(this.videoRef.current, values[0]);
           this.getPicture(this.videoRef.current, values[0]);
+          this.state.peer.on('open', id => {
+            console.log("My peer id is " + id);
+            this.setState({
+              my_id: id,
+              initialized: true,
+            })
+          });
+          this.state.peer.connect('8500682248',()=>{
+            console.log('connected');
+          });
         })
         .catch(error => {
           console.error(error);
